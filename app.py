@@ -42,22 +42,19 @@ DATA_URL = "https://raw.githubusercontent.com/instrovate/real-pinecone-demo/main
 df = pd.read_csv(DATA_URL)
 st.write("📄 Sample data loaded:", df.head())  # Optional: remove after testing
 
-# 🔍 Replace 'Text' with actual column name from the CSV
-# You can check with st.write(df.columns) if unsure
-texts = df["text"].dropna().tolist()  # Change 'content' if actual column name is different
+# 🔍 Adjust column name as needed
+texts = df["text"].dropna().tolist()
 
 # ✅ Step 1 – Embed and Upload
 if st.button("🔄 Embed & Upload to Pinecone"):
     with st.spinner("Embedding and uploading to Pinecone..."):
         vectors = []
         for i, text in enumerate(texts):
-           response = openai.embeddings.create(
-    input=[text],
-    model="text-embedding-3-small"
-)
-
-
-            embedding = response["data"][0]["embedding"]
+            response = openai.embeddings.create(
+                input=[text],
+                model="text-embedding-3-small"
+            )
+            embedding = response.data[0].embedding
             vectors.append((f"id-{i}", embedding, {"text": text}))
         index.upsert(vectors)
     st.success("✅ Data embedded and uploaded to Pinecone.")
@@ -66,12 +63,11 @@ if st.button("🔄 Embed & Upload to Pinecone"):
 query = st.text_input("🔍 Ask a question about Microsoft Fabric:")
 if query:
     with st.spinner("Generating results..."):
-       query_embedding = openai.embeddings.create(
-    input=[query],
-    model="text-embedding-3-small"
-).data[0].embedding
-
-
+        response = openai.embeddings.create(
+            input=[query],
+            model="text-embedding-3-small"
+        )
+        query_embedding = response.data[0].embedding
 
         result = index.query(vector=query_embedding, top_k=3, include_metadata=True)
 
