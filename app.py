@@ -11,7 +11,11 @@ pinecone_api_key = st.secrets["PINECONE_API_KEY"]
 pinecone_env = st.secrets["PINECONE_ENV"]
 pinecone_index_name = st.secrets["PINECONE_INDEX"]
 
+# ✅ Set your OpenAI API Key from Streamlit secrets
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
+# ✅ Set OpenAI key for openai module
+openai.api_key = os.environ["OPENAI_API_KEY"]
 
 # Initialize Pinecone
 pinecone.init(api_key=pinecone_api_key, environment=pinecone_env)
