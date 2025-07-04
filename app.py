@@ -44,7 +44,7 @@ st.write("📄 Sample data loaded:", df.head())  # Optional: remove after testin
 
 # 🔍 Replace 'Text' with actual column name from the CSV
 # You can check with st.write(df.columns) if unsure
-texts = df["content"].dropna().tolist()  # Change 'content' if actual column name is different
+texts = df["text"].dropna().tolist()  # Change 'content' if actual column name is different
 
 # ✅ Step 1 – Embed and Upload
 if st.button("🔄 Embed & Upload to Pinecone"):
