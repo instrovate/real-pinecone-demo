@@ -11,6 +11,8 @@ pinecone_api_key = st.secrets["PINECONE_API_KEY"]
 pinecone_env = st.secrets["PINECONE_ENV"]
 pinecone_index_name = st.secrets["PINECONE_INDEX"]
 
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
 # Initialize Pinecone
 pinecone.init(api_key=pinecone_api_key, environment=pinecone_env)
 if pinecone_index_name not in pinecone.list_indexes():
