@@ -1,5 +1,5 @@
-
 streamlit
 openai
-pinecone-client
 pandas
+tiktoken
+pinecone-client[grpc]==3.0.2
