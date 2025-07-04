@@ -51,10 +51,11 @@ if st.button("🔄 Embed & Upload to Pinecone"):
     with st.spinner("Embedding and uploading to Pinecone..."):
         vectors = []
         for i, text in enumerate(texts):
-            response = openai.Embedding.create(
-                input=text,
-                model="text-embedding-3-small"
-            )
+           response = openai.embeddings.create(
+                    input=[text],
+                    model="text-embedding-3-small"
+                   )
+
             embedding = response["data"][0]["embedding"]
             vectors.append((f"id-{i}", embedding, {"text": text}))
         index.upsert(vectors)
@@ -64,10 +65,11 @@ if st.button("🔄 Embed & Upload to Pinecone"):
 query = st.text_input("🔍 Ask a question about Microsoft Fabric:")
 if query:
     with st.spinner("Generating results..."):
-        query_embedding = openai.Embedding.create(
-            input=query,
-            model="text-embedding-3-small"
-        )["data"][0]["embedding"]
+        query_embedding = openai.embeddings.create(
+                           input=[query],
+                           model="text-embedding-3-small"
+                           ).data[0].embedding
+
 
         result = index.query(vector=query_embedding, top_k=3, include_metadata=True)
 
