@@ -2,17 +2,34 @@
 import streamlit as st
 import pandas as pd
 import openai
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
 import os
 
-# Set your API keys from Streamlit secrets or environment variables
-openai.api_key = st.secrets["OPENAI_API_KEY"]
-pinecone_api_key = st.secrets["PINECONE_API_KEY"]
-pinecone_env = st.secrets["PINECONE_ENV"]
-pinecone_index_name = st.secrets["PINECONE_INDEX"]
-
-# ✅ Set your OpenAI API Key from Streamlit secrets
+# ✅ Set environment variables from Streamlit secrets
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+os.environ["PINECONE_API_KEY"] = st.secrets["PINECONE_API_KEY"]
+os.environ["PINECONE_ENV"] = st.secrets["PINECONE_ENV"]
+os.environ["PINECONE_INDEX"] = st.secrets["PINECONE_INDEX"]
+
+# ✅ Initialize Pinecone client
+pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+
+# ✅ (Optional) create index if not already exists
+index_name = os.environ["PINECONE_INDEX"]
+
+if index_name not in pc.list_indexes().names():
+    pc.create_index(
+        name=index_name,
+        dimension=1536,
+        metric='cosine',
+        spec=ServerlessSpec(
+            cloud='aws',
+            region='us-east-1'  # update if your Pinecone ENV is different
+        )
+    )
+
+# ✅ Connect to index
+index = pc.Index(index_name)
 
 # ✅ Set OpenAI key for openai module
 openai.api_key = os.environ["OPENAI_API_KEY"]
