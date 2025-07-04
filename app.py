@@ -1,25 +1,25 @@
 import os
 import streamlit as st
 import pandas as pd
-from openai import OpenAI
 import pinecone
+from uuid import uuid4
 
-# --- Setup secrets ---
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+# Load secrets
 PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 PINECONE_ENV = st.secrets["PINECONE_ENV"]
-INDEX_NAME = st.secrets["PINECONE_INDEX"]
+PINECONE_INDEX = st.secrets["PINECONE_INDEX"]
 
-# --- Setup OpenAI Client ---
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-
-# --- Initialize Pinecone ---
+# Connect to Pinecone (modern v2 client)
 pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
-index = pinecone.Index(INDEX_NAME)
+index = pinecone.Index(PINECONE_INDEX)
 
-# --- Sample dataset ---
-data = {
-    "id": [1, 2, 3, 4],
+# Streamlit UI
+st.title("📄 Sample Data Loader + Pinecone Uploader")
+st.markdown("Load sample data, embed to Pinecone, and test questions using GPT + vector search.")
+
+# Sample data
+df = pd.DataFrame({
+    "id": [str(i) for i in range(1, 5)],
     "text": [
         "Microsoft Fabric is an end-to-end, SaaS analytics platform.",
         "Power BI is a part of Microsoft Fabric used for visual analytics.",
@@ -32,66 +32,28 @@ data = {
         {"source": "data_factory"},
         {"source": "onelake"}
     ]
-}
-df = pd.DataFrame(data)
+})
 
-# --- Streamlit UI ---
-st.title("📦 Pinecone RAG Demo – Microsoft Fabric Dataset")
-st.markdown("Load sample data, embed it, and ask questions using GPT and Pinecone Vector DB.")
-
-# --- Display Sample Data ---
-st.subheader("📄 Sample data loaded:")
+st.subheader("📊 Sample data loaded:")
 st.dataframe(df)
 
-# --- Embed & Upload to Pinecone ---
-if st.button("🔄 Embed & Upload to Pinecone"):
-    with st.spinner("Embedding and uploading to Pinecone..."):
-        vectors = []
-        for i, row in df.iterrows():
-            response = client.embeddings.create(
-                input=[row["text"]],
-                model="text-embedding-ada-002"
-            )
-            embedding = response.data[0].embedding
-            vectors.append((f"id-{i}", embedding, row["metadata"]))
-        index.upsert(vectors)
-    st.success("✅ Data embedded and uploaded to Pinecone.")
-
-# --- Question Input ---
-st.markdown("🔍 Ask a question about Microsoft Fabric:")
-question = st.text_input("Explain the components of Microsoft Fabric with examples.")
-
-# --- Answer Using GPT + Pinecone ---
-if question:
-    with st.spinner("Fetching answer..."):
-        # Embed the question
-        query_response = client.embeddings.create(
-            input=[question],
-            model="text-embedding-ada-002"
-        )
-        query_embedding = query_response.data[0].embedding
-
-        # Query Pinecone
-        result = index.query(
-            vector=query_embedding,
-            top_k=3,
-            include_metadata=True
-        )
-
-        # Prepare context from results
-        contexts = [match['metadata']['source'] + ": " + df.iloc[int(match['id'].split('-')[1])]['text'] for match in result.matches]
-        context_text = "\n".join(contexts)
-
-        # Compose prompt
-        prompt = f"Answer the following based on the context below:\n\nContext:\n{context_text}\n\nQuestion: {question}"
-
-        # Generate response
-        completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant who answers questions based on context."},
-                {"role": "user", "content": prompt}
+# Upload to Pinecone (no embedding required)
+if st.button("🔗 Embed & Upload to Pinecone"):
+    with st.spinner("Uploading to Pinecone..."):
+        try:
+            # Construct documents for auto-embedding (only id, text, metadata)
+            to_upsert = [
+                {
+                    "id": row["id"],
+                    "values": None,  # Skip manual vector, Pinecone auto-generates from 'text'
+                    "metadata": {
+                        "text": row["text"],
+                        **row["metadata"]
+                    }
+                }
+                for _, row in df.iterrows()
             ]
-        )
-        st.markdown("### 🧠 GPT Answer:")
-        st.write(completion.choices[0].message.content)
+            index.upsert(vectors=to_upsert)
+            st.success("✅ Uploaded to Pinecone successfully!")
+        except Exception as e:
+            st.error(f"❌ Failed to upload: {e}")
