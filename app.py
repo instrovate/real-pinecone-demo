@@ -52,7 +52,7 @@ if st.button("🔄 Embed & Upload to Pinecone"):
         for i, text in enumerate(texts):
             response = openai.embeddings.create(
                 input=[text],
-                model="text-embedding-3-small"
+                model="text-embedding-ada-002"
             )
             embedding = response.data[0].embedding
             vectors.append((f"id-{i}", embedding, {"text": text}))  # ✅ store 'text' as metadata
@@ -66,7 +66,7 @@ if query:
         try:
             query_embedding = openai.embeddings.create(
                 input=[query],
-                model="text-embedding-3-small"
+                model="text-embedding-ada-002"
             ).data[0].embedding
 
             result = index.query(
