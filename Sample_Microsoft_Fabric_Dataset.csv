@@ -1,0 +1,5 @@
+id,text,metadata
+1,"Microsoft Fabric is an end-to-end, SaaS analytics platform.",{'source': 'fabric_intro'}
+2,Power BI is a part of Microsoft Fabric used for visual analytics.,{'source': 'power_bi'}
+3,Data Factory in Fabric helps in orchestrating data workflows.,{'source': 'data_factory'}
+4,OneLake is the unified data lake for all Fabric workloads.,{'source': 'onelake'}
